@@ -1,0 +1,10 @@
+# Small demo setting: 5 instances with 20 agents on the "random" map.
+Generator:
+  type: CDT
+Input:
+  type: Text
+  file: problem_instances/spatial/random.txt
+Roadmaps: experiments/roadmaps/demo/
+Iterations: 5
+number_of_agents: 20
+Seed: 1

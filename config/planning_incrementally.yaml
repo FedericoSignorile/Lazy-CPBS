@@ -1,0 +1,26 @@
+# Runs on the demo instances of config/make_roadmaps.yaml.
+# For each n = 1..number_of_agents the first n agents are solved; a planner is
+# dropped from an instance after its first failure.
+Map: random
+Setting: demo
+Roadmaps: experiments/roadmaps/demo/
+Iterations: 5
+
+Planners:
+  PSIPP:
+    type: PSIPP
+    time_limit: 10.0
+  CCBS_CTC:
+    type: CCBS_CTC
+    time_limit: 10.0
+  CPBS:
+    type: CPBS
+    time_limit: 10.0
+  LazyCPBS:
+    type: LazyCPBS
+    time_limit: 10.0
+PairsToRun:
+  - {Problem: Annotated, Planner: PSIPP}
+  - {Problem: Annotated, Planner: CCBS_CTC}
+  - {Problem: Annotated, Planner: CPBS}
+  - {Problem: Annotated, Planner: LazyCPBS}

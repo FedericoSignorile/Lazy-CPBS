@@ -1,0 +1,131 @@
+diff --git a/sipp.cpp b/sipp.cpp
+index 6e1ab35..5fa11e1 100644
+--- a/sipp.cpp
++++ b/sipp.cpp
+@@ -315,16 +315,20 @@ std::vector<Node> SIPP::get_endpoints(int node_id, double node_i, double node_j,
+ {
+     std::vector<Node> nodes;
+     nodes = {Node(node_id, 0, 0, node_i, node_j, nullptr, t1, t2)};
+-    if(collision_intervals[node_id].empty())
++    // find() instead of operator[]: no empty entries are inserted in the map
++    auto it = collision_intervals.find(node_id);
++    if(it == collision_intervals.end() || it->second.empty())
++    {
++        nodes[0].interval_id = 0;
+         return nodes;
+-    else
+-        for(unsigned int k = 0; k < collision_intervals[node_id].size(); k++)
+-        {    
++    }
++    for(unsigned int k = 0; k < it->second.size(); k++)
++    {
+             unsigned int i(0);
+             while(i < nodes.size())
+             {
+                 Node n = nodes[i];
+-                auto c = collision_intervals[node_id][k];
++                auto c = it->second[k];
+                 bool changed = false;
+                 if(c.first - CN_EPSILON < n.interval.first && c.second + CN_EPSILON > n.interval.second)
+                 {
+@@ -355,6 +359,9 @@ std::vector<Node> SIPP::get_endpoints(int node_id, double node_i, double node_j,
+                 i++;
+             }
+         }
++    // each safe interval of the vertex gets its own id
++    for(int idx = 0; idx < (int)nodes.size(); ++idx)
++        nodes[idx].interval_id = idx;
+     return nodes;
+ }
+ 
+@@ -376,6 +383,36 @@ double SIPP::check_endpoint(Node start, Node goal)
+         return start.g + cost;
+ }
+ 
++// The start node is the safe interval of the start vertex that contains t = 0
++// (upstream takes the first interval, which may begin later).
++static bool pick_start_at_time_zero(std::vector<Node>& out_starts,
++                                    const std::vector<Node>& endpoints)
++{
++    for(const auto& ep : endpoints)
++        if(ep.interval.first <= CN_EPSILON && 0.0 <= ep.interval.second + CN_EPSILON)
++        {
++            Node s = ep;
++            s.g = 0.0;
++            out_starts = {s};
++            return true;
++        }
++    return false;
++}
++
++// The goal node is the safe interval of the goal vertex that never ends
++// (upstream takes the last interval, which may be bounded).
++static bool pick_unbounded_goal(std::vector<Node>& out_goals,
++                                const std::vector<Node>& endpoints)
++{
++    for(const auto& ep : endpoints)
++        if(ep.interval.second >= CN_INFINITY / 2.0)
++        {
++            out_goals = {ep};
++            return true;
++        }
++    return false;
++}
++
+ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, Heuristic &h_values)
+ {
+     this->clear();
+@@ -392,7 +429,9 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
+         {
+             if(i == 0)
+             {
+-                starts = {get_endpoints(agent.start_id, agent.start_i, agent.start_j, 0, CN_INFINITY).at(0)};
++                auto se = get_endpoints(agent.start_id, agent.start_i, agent.start_j, 0, CN_INFINITY);
++                if(!pick_start_at_time_zero(starts, se))
++                    return Path();
+                 goals = get_endpoints(landmarks[i].id1, map.get_i(landmarks[i].id1), map.get_j(landmarks[i].id1), landmarks[i].t1, landmarks[i].t2);
+             }
+             else
+@@ -401,7 +440,11 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
+                 for(auto p:results)
+                     starts.push_back(p.nodes.back());
+                 if(i == landmarks.size())
+-                    goals = {get_endpoints(agent.goal_id, agent.goal_i, agent.goal_j, 0, CN_INFINITY).back()};
++                {
++                    auto ge = get_endpoints(agent.goal_id, agent.goal_i, agent.goal_j, 0, CN_INFINITY);
++                    if(!pick_unbounded_goal(goals, ge))
++                        return Path();
++                }
+                 else
+                     goals = get_endpoints(landmarks[i].id1, map.get_i(landmarks[i].id1), map.get_j(landmarks[i].id1), landmarks[i].t1, landmarks[i].t2);
+             }
+@@ -457,11 +500,12 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
+                     if(best_start_id >= 0)
+                     {
+                         goals[k].g = best_g;
+-                        if(collision_intervals[goals[k].id].empty())
++                        auto cit = collision_intervals.find(goals[k].id);
++                        if(cit == collision_intervals.end() || cit->second.empty())
+                             goals[k].interval.second = CN_INFINITY;
+                         else
+                         {
+-                            for(auto c:collision_intervals[goals[k].id])
++                            for(auto c:cit->second)
+                                 if(goals[k].g < c.first)
+                                 {
+                                     goals[k].interval.second = c.first;
+@@ -487,8 +531,12 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
+     }
+     else
+     {
+-        starts = {get_endpoints(agent.start_id, agent.start_i, agent.start_j, 0, CN_INFINITY).at(0)};
+-        goals = {get_endpoints(agent.goal_id, agent.goal_i, agent.goal_j, 0, CN_INFINITY).back()};
++        auto se = get_endpoints(agent.start_id, agent.start_i, agent.start_j, 0, CN_INFINITY);
++        if(!pick_start_at_time_zero(starts, se))
++            return Path();
++        auto ge = get_endpoints(agent.goal_id, agent.goal_i, agent.goal_j, 0, CN_INFINITY);
++        if(!pick_unbounded_goal(goals, ge))
++            return Path();
+         parts = find_partial_path(starts, goals, map, h_values);
+         expanded = int(close.size());
+         if(parts[0].cost < 0)

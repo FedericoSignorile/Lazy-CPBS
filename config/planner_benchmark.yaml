@@ -1,0 +1,10 @@
+# Solves one roadmap problem read from stdin and prints the plan to stdout.
+Problems:
+  Stdin:
+    type: Explicit
+    file: stdin
+Planners:
+  LazyCPBS:
+    type: LazyCPBS
+    time_limit: 30.0
+Output: stdout

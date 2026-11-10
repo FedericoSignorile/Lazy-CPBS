@@ -1,0 +1,19 @@
+# Settings of the paper campaign and the methods run on each.
+#   all:  CCBS CCBS_CTC PSIPP CPBS LazyCPBS + the CPBSFamily ablation variants
+#   main: CCBS CCBS_CTC PSIPP CPBS LazyCPBS
+Berlin_100_CDT     all
+Berlin_700_CDT     all
+den520d_100_CDT    all
+den520d_100_kPRM   all
+den520d_700_CDT    all
+den520d_700_kPRM   all
+empty16_100_CDT    all
+empty16_100_kPRM   all
+empty256_100_CDT   all
+empty256_700_CDT   main
+maze_100_CDT       all
+maze_700_CDT       main
+random_100_CDT     all
+random_700_CDT     main
+warehouse_100_CDT  all
+warehouse_700_CDT  all

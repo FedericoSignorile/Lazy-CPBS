@@ -1,0 +1,2 @@
+# the CCBS patch must keep the CRLF line endings of upstream sipp.cpp
+*.patch -text

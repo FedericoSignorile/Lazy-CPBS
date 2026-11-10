@@ -1,0 +1,57 @@
+Generator:
+  type: kPRM
+  number_of_vertices: 0
+  number_of_neighbors: 15
+Input:
+  type: Text
+  file: problem_instances/spatial/maze.txt
+Roadmaps: experiments/roadmaps/maze_100_kPRM/
+Iterations: 25
+number_of_agents: 100
+Seed: 749888110
+Map: maze
+Setting: 100_kPRM
+
+Planners:
+  CCBS:
+    type: CCBS
+    time_limit: 30.0
+  CCBS_CTC:
+    type: CCBS_CTC
+    time_limit: 30.0
+  PSIPP:
+    type: PSIPP
+    time_limit: 30.0
+  CPBS:
+    type: CPBS
+    time_limit: 30.0
+  LazyCPBS:
+    type: LazyCPBS
+    time_limit: 30.0
+  Eager_ReplanList_EGT:
+    type: CPBSFamily
+    evaluation: eager
+    order: replanlist
+    early_goal_test: true
+    time_limit: 30.0
+  Eager_ReplanList:
+    type: CPBSFamily
+    evaluation: eager
+    order: replanlist
+    early_goal_test: false
+    time_limit: 30.0
+  Eager_Fixed_EGT:
+    type: CPBSFamily
+    evaluation: eager
+    order: fixed
+    early_goal_test: true
+    time_limit: 30.0
+PairsToRun:
+  - {Problem: Unannotated, Planner: CCBS}
+  - {Problem: Annotated, Planner: CCBS_CTC}
+  - {Problem: Annotated, Planner: PSIPP}
+  - {Problem: Annotated, Planner: CPBS}
+  - {Problem: Annotated, Planner: LazyCPBS}
+  - {Problem: Annotated, Planner: Eager_ReplanList_EGT}
+  - {Problem: Annotated, Planner: Eager_ReplanList}
+  - {Problem: Annotated, Planner: Eager_Fixed_EGT}
